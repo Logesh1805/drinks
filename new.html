@@ -1,0 +1,504 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Closca — Detox</title>
+<style>
+  :root{
+    --ink:#3a2f22;
+    --ink-soft:#6b5a44;
+    --btn-dark:#2b2620;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;font-family:'Helvetica Neue',Arial,sans-serif;}
+
+  .slide{
+    position:relative;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    transition:background 0.7s ease;
+    overflow:hidden;
+    animation:pageIn 0.8s ease both;
+  }
+
+  @keyframes pageIn{
+    from{opacity:0;}
+    to{opacity:1;}
+  }
+
+  /* ---------- SLIDE TRANSITIONS ---------- */
+  .text-col, .image-col{
+    will-change:transform, opacity;
+  }
+
+  @keyframes textOutNext{ to{opacity:0; transform:translateX(-30px);} }
+  @keyframes textInNext{ from{opacity:0; transform:translateX(30px);} to{opacity:1; transform:translateX(0);} }
+  @keyframes textOutPrev{ to{opacity:0; transform:translateX(30px);} }
+  @keyframes textInPrev{ from{opacity:0; transform:translateX(-30px);} to{opacity:1; transform:translateX(0);} }
+
+  @keyframes imgOutNext{ to{opacity:0; transform:scale(0.88) translateX(-16px) rotate(-4deg);} }
+  @keyframes imgInNext{ from{opacity:0; transform:scale(0.88) translateX(16px) rotate(4deg);} to{opacity:1; transform:scale(1) translateX(0) rotate(0);} }
+  @keyframes imgOutPrev{ to{opacity:0; transform:scale(0.88) translateX(16px) rotate(4deg);} }
+  @keyframes imgInPrev{ from{opacity:0; transform:scale(0.88) translateX(-16px) rotate(-4deg);} to{opacity:1; transform:scale(1) translateX(0) rotate(0);} }
+
+  .text-col.out-next{animation:textOutNext .32s cubic-bezier(.4,0,.2,1) both;}
+  .text-col.in-next{animation:textInNext .42s cubic-bezier(.2,.7,.3,1) both;}
+  .text-col.out-prev{animation:textOutPrev .32s cubic-bezier(.4,0,.2,1) both;}
+  .text-col.in-prev{animation:textInPrev .42s cubic-bezier(.2,.7,.3,1) both;}
+
+  .image-col.out-next{animation:imgOutNext .32s cubic-bezier(.4,0,.2,1) both;}
+  .image-col.in-next{animation:imgInNext .46s cubic-bezier(.2,.7,.3,1) both;}
+  .image-col.out-prev{animation:imgOutPrev .32s cubic-bezier(.4,0,.2,1) both;}
+  .image-col.in-prev{animation:imgInPrev .46s cubic-bezier(.2,.7,.3,1) both;}
+
+  .counter-flip{
+    display:inline-block;
+    animation:counterFlip .4s ease;
+  }
+  @keyframes counterFlip{
+    0%{opacity:0; transform:translateY(-6px);}
+    100%{opacity:1; transform:translateY(0);}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .slide, .text-col, .image-col, .counter-flip, .bottle{animation:none !important; transition:none !important;}
+  }
+
+  /* ---------- NAV ---------- */
+  .nav{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:28px 48px;
+    z-index:5;
+  }
+  .nav .left, .nav .right{display:flex;align-items:center;gap:28px;}
+  .burger{font-size:22px;cursor:pointer;color:var(--ink);}
+  .logo{display:flex;align-items:center;gap:8px;font-weight:700;letter-spacing:1px;color:var(--ink);font-size:15px;}
+  .logo .dot{width:16px;height:16px;border-radius:50%;background:var(--ink);display:inline-block;}
+  .menu{display:flex;gap:32px;list-style:none;}
+  .menu li{font-size:14px;color:var(--ink);cursor:pointer;position:relative;}
+  .menu li.active::after{
+    content:"";
+    position:absolute;left:0;right:0;bottom:-6px;height:2px;background:var(--ink);
+  }
+  .icons{display:flex;gap:18px;font-size:16px;color:var(--ink);}
+  .icons span{cursor:pointer;}
+
+  /* ---------- CONTENT ---------- */
+  .content{
+    flex:1;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    align-items:center;
+    padding:0 48px;
+    position:relative;
+  }
+
+  .text-col{max-width:460px;}
+  .eyebrow{
+    letter-spacing:2px;
+    font-size:12px;
+    font-weight:600;
+    color:var(--ink-soft);
+    margin-bottom:14px;
+  }
+  .title{
+    font-family:Georgia,'Times New Roman',serif;
+    font-size:64px;
+    line-height:1.05;
+    color:var(--ink);
+    margin:0 0 18px 0;
+    font-weight:400;
+  }
+  .price{
+    font-size:20px;
+    color:var(--ink);
+    margin-bottom:28px;
+  }
+  .quote{
+    font-family:Georgia,'Times New Roman',serif;
+    font-style:italic;
+    font-size:20px;
+    color:var(--ink);
+    margin-bottom:16px;
+    max-width:360px;
+  }
+  .desc{
+    font-size:14px;
+    line-height:1.7;
+    color:var(--ink-soft);
+    max-width:360px;
+    margin-bottom:22px;
+  }
+  .shop-link{
+    font-size:14px;
+    font-weight:600;
+    color:var(--ink);
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    cursor:pointer;
+  }
+
+  /* ---------- IMAGE ---------- */
+  .image-col{
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    height:70vh;
+  }
+  .fruit-circle{
+    position:absolute;
+    width:340px;
+    height:340px;
+    border-radius:63% 37% 54% 46% / 55% 48% 52% 45%;
+    overflow:hidden;
+    filter:saturate(1.08);
+    transition:background 0.6s ease, border-radius 0.6s ease;
+    box-shadow:0 20px 50px rgba(0,0,0,0.12);
+  }
+  .fruit-pattern{
+    width:100%;
+    height:100%;
+    display:block;
+  }
+  .bottle{
+    position:relative;
+    z-index:2;
+    width:150px;
+    filter:drop-shadow(0 30px 40px rgba(0,0,0,0.18));
+    animation:floatBottle 4.5s ease-in-out infinite;
+  }
+  .bottle svg{width:100%;display:block;}
+
+  @keyframes floatBottle{
+    0%,100%{transform:translateY(0);}
+    50%{transform:translateY(-14px);}
+  }
+
+  @keyframes pulseCircle{
+    0%,100%{transform:scale(1);}
+    50%{transform:scale(1.04);}
+  }
+  .fruit-circle{animation:pulseCircle 6s ease-in-out infinite;}
+
+  /* ---------- CONTROLS ---------- */
+  .controls{
+    position:absolute;
+    right:48px;
+    bottom:40px;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    z-index:5;
+  }
+  .counter{
+    font-size:13px;
+    color:var(--ink-soft);
+    position:absolute;
+    top:0;
+    right:48px;
+    padding-top:20px;
+  }
+  .arrow-btn{
+    width:52px;height:52px;
+    border-radius:50%;
+    border:none;
+    background:rgba(255,255,255,0.55);
+    color:var(--ink);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    font-size:18px;
+    transition:transform .2s ease, background .2s ease;
+  }
+  .arrow-btn:hover{transform:scale(1.06);}
+  .arrow-btn.next{background:var(--btn-dark);color:#fff;}
+  .arrow-btn:active{transform:scale(0.94);}
+
+  .expand-btn{
+    position:absolute;
+    top:20px;right:0;
+    width:52px;height:52px;
+    border-radius:16px;
+    background:rgba(255,255,255,0.55);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    font-size:16px;
+    color:var(--ink);
+  }
+
+  .top-count{
+    position:absolute;
+    top:28px;right:48px;
+    font-size:13px;
+    color:var(--ink-soft);
+    z-index:5;
+  }
+
+  @media (max-width:900px){
+    .content{grid-template-columns:1fr;padding:0 24px;text-align:left;}
+    .title{font-size:42px;}
+    .image-col{order:-1;height:38vh;margin-top:20px;}
+    .fruit-circle{width:220px;height:220px;}
+    .bottle{width:100px;}
+    .nav{padding:20px 24px;}
+    .menu{display:none;}
+    .controls{right:24px;bottom:24px;}
+    .top-count{right:24px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="slide" id="slide">
+
+  <div class="nav">
+    <div class="left">
+      <span class="burger">&#9776;</span>
+      <div class="logo"><span class="dot"></span> CLOSCA</div>
+    </div>
+    <ul class="menu">
+      <li>Home</li>
+      <li>About</li>
+      <li class="active">Detox</li>
+      <li>Shop</li>
+    </ul>
+    <div class="right icons">
+      <span>&#128269;</span>
+      <span>&#128100;</span>
+      <span>&#128722;</span>
+    </div>
+  </div>
+
+  <div class="top-count" id="counter">1/4</div>
+
+  <div class="content">
+    <div class="text-col">
+      <div class="eyebrow">ORGANIC</div>
+      <h1 class="title" id="title">Berry<br>Detox</h1>
+      <div class="price" id="price">$ 17.90</div>
+      <p class="quote" id="quote">Start the week the way you mean to go on.</p>
+      <p class="desc" id="desc">Antioxidant-rich berries kickstart your system gently, waking up digestion and giving your body a clean, energising reset.</p>
+      <a class="shop-link" href="#">Shop Now &#8594;</a>
+    </div>
+
+    <div class="image-col">
+      <div class="fruit-circle" id="fruitCircle">
+        <svg class="fruit-pattern" id="fruitPattern" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+      <div class="bottle">
+        <svg viewBox="0 0 120 260" xmlns="http://www.w3.org/2000/svg">
+          <rect x="42" y="0" width="36" height="14" rx="3" fill="#d9d9d9"/>
+          <rect x="38" y="12" width="44" height="10" rx="2" fill="#bfbfbf"/>
+          <path d="M40 22 h40 v10 c10 6 14 16 14 30 v170 a8 8 0 0 1 -8 8 h-52 a8 8 0 0 1 -8 -8 v-170 c0 -14 4 -24 14 -30 z" fill="url(#liquid)"/>
+          <rect x="30" y="120" width="60" height="86" rx="6" fill="rgba(255,255,255,0.92)"/>
+          <text id="dayNum" x="60" y="150" font-size="22" text-anchor="middle" fill="#333" font-family="Arial" font-weight="700">01</text>
+          <text id="dayLabel" x="60" y="164" font-size="7" text-anchor="middle" fill="#777" font-family="Arial" letter-spacing="1">DAY ONE</text>
+          <text x="60" y="178" font-size="6.5" text-anchor="middle" fill="#999" font-family="Arial" letter-spacing="1">ORGANIC DETOX</text>
+          <text id="flavorName" x="60" y="194" font-size="12" text-anchor="middle" fill="#333" font-family="Georgia" font-weight="700">BERRY</text>
+          <text x="60" y="194" font-size="12" text-anchor="middle" fill="#333" font-family="Georgia" font-weight="700" dy="12">DETOX</text>
+          <text id="ingredients" x="60" y="216" font-size="6" text-anchor="middle" fill="#999" font-family="Arial">strawberry, blueberry, beet, ginger</text>
+          <defs>
+            <linearGradient id="liquid" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#c65a8f"/>
+              <stop offset="100%" stop-color="#7e2e56"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="expand-btn">&#8599;</div>
+
+  <div class="controls">
+    <button class="arrow-btn prev" id="prevBtn" aria-label="Previous">&#8592;</button>
+    <button class="arrow-btn next" id="nextBtn" aria-label="Next">&#8594;</button>
+  </div>
+
+</div>
+
+<script>
+  
+  const products = [
+    {
+      day:"01", dayLabel:"DAY ONE", flavorTop:"BERRY", flavorBottom:"DETOX",
+      title:"Berry<br>Detox", price:"$ 17.90",
+      quote:"Start the week the way you mean to go on.",
+      desc:"Antioxidant-rich berries kickstart your system gently, waking up digestion and giving your body a clean, energising reset.",
+      ingredients:"strawberry, blueberry, beet, ginger",
+      bg:"linear-gradient(160deg,#f3d6df,#e9b6c8)",
+      fruitType:"berry",
+      fruitColors:{skin:"#7e2350", flesh:"#c6437c", seed:"#3f0f2a", bg:"#e9b6c8"},
+      liquidTop:"#c65a8f", liquidBottom:"#7e2e56"
+    },
+    {
+      day:"02", dayLabel:"DAY TWO", flavorTop:"GRAPEFRUIT", flavorBottom:"DETOX",
+      title:"Grapefruit<br>Detox", price:"$ 18.40",
+      quote:"A sharp, citrus reset for a foggy morning.",
+      desc:"Pink grapefruit and mint sweep away sluggishness, leaving your senses sharp and your gut lighter.",
+      ingredients:"grapefruit, mint, cucumber, lime",
+      bg:"linear-gradient(160deg,#ffd9c2,#ffb98f)",
+      fruitType:"citrus",
+      fruitColors:{skin:"#e8734a", flesh:"#ff9a7a", pith:"#ffe3d0", line:"#d9502a", bg:"#ffb98f"},
+      liquidTop:"#ff9a6b", liquidBottom:"#d9502a"
+    },
+    {
+      day:"03", dayLabel:"DAY THREE", flavorTop:"GOLD", flavorBottom:"DETOX",
+      title:"Orange<br>Detox", price:"$ 19.90",
+      quote:"Every now and then, everyone needs a spring cleaning cleanse.",
+      desc:"Cleansing your gut of harmful bacteria will help you regrow healthy bacteria at a normal rate. Our detox helps you get clean.",
+      ingredients:"carrot, pumpkin, apple, ginger, lemon",
+      bg:"linear-gradient(160deg,#ffdca3,#ffb85a)",
+      fruitType:"citrus",
+      fruitColors:{skin:"#e08a1c", flesh:"#ffb84d", pith:"#fff0d2", line:"#c96f10", bg:"#ffb85a"},
+      liquidTop:"#ffb02e", liquidBottom:"#e0790f"
+    },
+    {
+      day:"04", dayLabel:"DAY FOUR", flavorTop:"LEMON", flavorBottom:"DETOX",
+      title:"Lemon<br>Detox", price:"$ 19.90",
+      quote:"Getting healthy is good for the mind, body, and soul.",
+      desc:"A little bit of healthy food can go a long way. But healthy food needs a healthy gut. We have the perfect solution for you.",
+      ingredients:"water, lime, artichoke, ginger",
+      bg:"linear-gradient(160deg,#f5eb9f,#eddb4e)",
+      fruitType:"citrus",
+      fruitColors:{skin:"#d6c11a", flesh:"#f3e678", pith:"#fbf6c9", line:"#b9a411", bg:"#eddb4e"},
+      liquidTop:"#f0dc3f", liquidBottom:"#c9b312"
+    }
+  ];
+
+  let index = 0;
+  let animating = false;
+
+  const slideEl = document.getElementById('slide');
+  const titleEl = document.getElementById('title');
+  const priceEl = document.getElementById('price');
+  const quoteEl = document.getElementById('quote');
+  const descEl = document.getElementById('desc');
+  const counterEl = document.getElementById('counter');
+  const fruitCircleEl = document.getElementById('fruitCircle');
+  const fruitPatternEl = document.getElementById('fruitPattern');
+  const dayNumEl = document.getElementById('dayNum');
+  const dayLabelEl = document.getElementById('dayLabel');
+  const flavorNameEl = document.getElementById('flavorName');
+  const ingredientsEl = document.getElementById('ingredients');
+  const liquidGradient = document.querySelector('#liquid stop:nth-child(1)');
+  const liquidGradient2 = document.querySelector('#liquid stop:nth-child(2)');
+  const textColEl = document.querySelector('.text-col');
+  const imageColEl = document.querySelector('.image-col');
+
+  // Draws one citrus cross-section (rind ring + segment lines) as a symbol-like group
+  function citrusSlice(cx, cy, r, c){
+    const segments = 10;
+    let lines = '';
+    for(let i=0;i<segments;i++){
+      const a = (Math.PI*2/segments)*i;
+      const x2 = cx + Math.cos(a)*(r*0.82);
+      const y2 = cy + Math.sin(a)*(r*0.82);
+      lines += `<line x1="${cx}" y1="${cy}" x2="${x2}" y2="${y2}" stroke="${c.line}" stroke-width="${r*0.03}" opacity="0.55"/>`;
+    }
+    return `
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="${c.skin}"/>
+      <circle cx="${cx}" cy="${cy}" r="${r*0.9}" fill="${c.pith}"/>
+      <circle cx="${cx}" cy="${cy}" r="${r*0.82}" fill="${c.flesh}"/>
+      ${lines}
+      <circle cx="${cx}" cy="${cy}" r="${r*0.1}" fill="${c.pith}" opacity="0.8"/>
+    `;
+  }
+
+  // Draws a cluster of small round berries with a soft highlight
+  function berryCluster(cx, cy, r, c){
+    const berries = [
+      [0,0,1], [0.6,0.2,0.8], [-0.55,0.3,0.75], [0.15,-0.6,0.7], [-0.3,-0.5,0.65], [0.55,-0.35,0.6]
+    ];
+    return berries.map(([dx,dy,s]) => {
+      const bx = cx + dx*r, by = cy + dy*r, br = r*0.42*s;
+      return `
+        <circle cx="${bx}" cy="${by}" r="${br}" fill="${c.skin}"/>
+        <circle cx="${bx}" cy="${by}" r="${br*0.72}" fill="${c.flesh}"/>
+        <circle cx="${bx - br*0.3}" cy="${by - br*0.3}" r="${br*0.18}" fill="#ffffff" opacity="0.5"/>
+        <circle cx="${bx}" cy="${by}" r="${br*0.1}" fill="${c.seed}"/>
+      `;
+    }).join('');
+  }
+
+  // Scatters overlapping slices/clusters across the viewBox to fill the blob like the reference image
+  function buildFruitPattern(product){
+    const c = product.fruitColors;
+    const positions = [
+      [70,80,105],[230,60,90],[330,140,95],[60,230,100],
+      [200,220,120],[330,320,90],[100,340,95],[260,360,80],
+      [10,150,80],[380,240,80]
+    ];
+    let shapes = `<rect x="0" y="0" width="400" height="400" fill="${c.bg}"/>`;
+    positions.forEach(([x,y,r]) => {
+      shapes += product.fruitType === 'berry' ? berryCluster(x,y,r,c) : citrusSlice(x,y,r,c);
+    });
+    return shapes;
+  }
+
+  function applyContent(){
+    const p = products[index];
+    slideEl.style.background = p.bg;
+    titleEl.innerHTML = p.title;
+    priceEl.textContent = p.price;
+    quoteEl.textContent = p.quote;
+    descEl.textContent = p.desc;
+    fruitPatternEl.innerHTML = buildFruitPattern(p);
+    dayNumEl.textContent = p.day;
+    dayLabelEl.textContent = p.dayLabel;
+    ingredientsEl.textContent = p.ingredients;
+    flavorNameEl.innerHTML = p.flavorTop + '<tspan x="60" dy="12">' + p.flavorBottom + '</tspan>';
+    liquidGradient.setAttribute('stop-color', p.liquidTop);
+    liquidGradient2.setAttribute('stop-color', p.liquidBottom);
+
+    counterEl.innerHTML = '<span class="counter-flip">' + (index+1) + "/" + products.length + '</span>';
+  }
+
+  function goTo(newIndex, direction){
+    if(animating) return;
+    animating = true;
+    index = newIndex;
+
+    const outText = direction === 'next' ? 'out-next' : 'out-prev';
+    const outImg  = direction === 'next' ? 'out-next' : 'out-prev';
+    const inText  = direction === 'next' ? 'in-next'  : 'in-prev';
+    const inImg   = direction === 'next' ? 'in-next'  : 'in-prev';
+
+    textColEl.classList.add(outText);
+    imageColEl.classList.add(outImg);
+
+    setTimeout(() => {
+      applyContent();
+      textColEl.classList.remove(outText);
+      imageColEl.classList.remove(outImg);
+      void textColEl.offsetWidth;
+      textColEl.classList.add(inText);
+      imageColEl.classList.add(inImg);
+
+      setTimeout(() => {
+        textColEl.classList.remove(inText);
+        imageColEl.classList.remove(inImg);
+        animating = false;
+      }, 480);
+    }, 320);
+  }
+
+  document.getElementById('nextBtn').addEventListener('click', () => {
+    goTo((index + 1) % products.length, 'next');
+  });
+  document.getElementById('prevBtn').addEventListener('click', () => {
+    goTo((index - 1 + products.length) % products.length, 'prev');
+  });
+
+  applyContent();
+</script>
+
+</body>
+</html>
